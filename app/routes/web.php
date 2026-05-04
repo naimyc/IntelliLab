@@ -7,5 +7,5 @@ Route::get('/', function () {
     });
 
 //Fixes any Laravel fallback route
-Route::view('/{any}', 'app')->where('any', '.*');
+// Route::view('/{any}', 'app')->where('any', '.*');
 

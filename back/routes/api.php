@@ -4,6 +4,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Illuminate\Support\Facades\Route;
+
+Route::post('/test', function (Request $request) {
+    return response()->json(['message' => 'Test successful']);
+});
+
 
 Route::post('/register', function (Request $request) {
 

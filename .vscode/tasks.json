@@ -1,0 +1,27 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Backend",
+      "type": "shell",
+      "command": "cd back; php artisan serve",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Frontend",
+      "type": "shell",
+      "command": "cd front; npm run dev",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Full Stack",
+      "dependsOn": [
+        "Run Backend",
+        "Run Frontend"
+      ],
+      "dependsOrder": "parallel"
+    }
+  ]
+}

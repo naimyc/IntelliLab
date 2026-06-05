@@ -1,7 +1,7 @@
-<script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <HelloWorld />
+  <DashboardView />
 </template>
+
+<script setup lang="ts">
+import DashboardView from "./views/DashboardView.vue";
+</script>

@@ -1,60 +1,36 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use App\Models\User;
+use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/test', function (Request $request) {
-    return response()->json(['message' => 'Test successful']);
+/*
+|--------------------------------------------------------------------------
+| IntelliLab Auth Routes
+|--------------------------------------------------------------------------
+|
+| All routes are prefixed with /api (set in bootstrap/app.php or RouteServiceProvider).
+|
+| Public routes — no session required
+| Protected routes — require valid Sanctum session cookie
+|
+*/
+
+// ── Public ────────────────────────────────────────────────────────────────
+/*
+Route::middleware('web')
+    ->prefix('auth')
+    ->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login',    [AuthController::class, 'login']);
+});
+*/
+Route::prefix('auth')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
 });
 
-
-Route::post('/register', function (Request $request) {
-
-    $request->validate([
-        'name' => 'required',
-        'email' => 'required|email|unique:users',
-        'password' => 'required|min:6',
-    ]);
-
-    $user = User::create([
-        'name' => $request->name,
-        'email' => $request->email,
-        'password' => Hash::make($request->password),
-    ]);
-
-    Auth::login($user);
-
-    return response()->json($user);
+// ── Protected (Sanctum session auth) ─────────────────────────────────────
+Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me',      [AuthController::class, 'me']);
 });
-
-Route::post('/login', function (Request $request) {
-
-    if (!Auth::attempt($request->only('email', 'password'))) {
-        return response()->json([
-            'message' => 'Invalid credentials'
-        ], 401);
-    }
-
-    $request->session()->regenerate();
-
-    return response()->json(Auth::user());
-});
-
-Route::post('/logout', function (Request $request) {
-
-    Auth::logout();
-
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-
-    return response()->json([
-        'message' => 'Logged out'
-    ]);
-});
-
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');

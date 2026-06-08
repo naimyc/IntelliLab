@@ -17,29 +17,27 @@ class AuthController extends Controller
     /**
      * POST /api/auth/register
      *
-     * Creates a new user account and starts an authenticated session.
-     * Password is auto-hashed by the User model's 'hashed' cast.
+     * Legt einen neuen User an und startet direkt eine Session.
+     * Konsistent mit login() — beide nutzen Session-Cookies, keinen Token.
      */
-public function register(RegisterRequest $request): JsonResponse
-{
-    $user = User::create($request->validated());
+    public function register(RegisterRequest $request): JsonResponse
+    {
+        $user = User::create($request->validated());
 
-    $token = $user->createToken('api-token')->plainTextToken;
+        Auth::login($user);
+        $request->session()->regenerate(); // Session-ID rotieren → kein Session-Fixation-Angriff
 
-    
-
-    return response()->json([
-        'message' => 'Account created successfully.',
-        'user' => new UserResource($user),
-        'token' => $token,
-    ], 201);
-}
+        return response()->json([
+            'message' => 'Account created successfully.',
+            'user'    => new UserResource($user),
+        ], 201);
+    }
 
     /**
      * POST /api/auth/login
      *
-     * Validates credentials and establishes a session.
-     * Throws 422 on bad credentials (never reveal which field is wrong).
+     * Prüft Credentials und startet eine Session.
+     * Bei Fehler: generische Meldung → kein User-Enumeration möglich.
      */
     public function login(LoginRequest $request): JsonResponse
     {
@@ -51,7 +49,7 @@ public function register(RegisterRequest $request): JsonResponse
             ]);
         }
 
-        $request->session()->regenerate(); // prevent session fixation
+        $request->session()->regenerate(); // Session-ID rotieren nach erfolgreichem Login
 
         return response()->json([
             'message' => 'Logged in successfully.',
@@ -62,15 +60,15 @@ public function register(RegisterRequest $request): JsonResponse
     /**
      * POST /api/auth/logout
      *
-     * Destroys the current session and invalidates the CSRF token.
-     * Requires auth:sanctum middleware.
+     * Zerstört die Session und rotiert den CSRF-Token.
+     * Erfordert auth:sanctum Middleware.
      */
     public function logout(Request $request): JsonResponse
     {
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-        $request->session()->regenerateToken(); // rotate CSRF token
+        $request->session()->regenerateToken(); // Neuen CSRF-Token generieren
 
         return response()->json([
             'message' => 'Logged out successfully.',
@@ -80,8 +78,8 @@ public function register(RegisterRequest $request): JsonResponse
     /**
      * GET /api/auth/me
      *
-     * Returns the currently authenticated user.
-     * Returns 401 automatically if not authenticated (Sanctum middleware).
+     * Gibt den aktuell eingeloggten User zurück.
+     * 401 kommt automatisch von Sanctum wenn kein gültiger Cookie.
      */
     public function me(Request $request): JsonResponse
     {

@@ -1,13 +1,15 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import api from '@/lib/axios'
+import api from '../lib/axios'
 
 export const useAuthStore = defineStore('auth', () => {
   const user    = ref(null)
   const loading = ref(false)
   const error   = ref(null)
+  const initialized = ref(false)
 
   const isLoggedIn = computed(() => !!user.value)
+  const isAuthenticated = isLoggedIn
 
   async function getCsrf() {
     await api.get('/sanctum/csrf-cookie')
@@ -71,5 +73,19 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { user, loading, error, isLoggedIn, register, login, logout, fetchUser }
+  async function init() {
+    if (initialized.value) {
+      return
+    }
+
+    loading.value = true
+    try {
+      await fetchUser()
+    } finally {
+      initialized.value = true
+      loading.value = false
+    }
+  }
+
+  return { user, loading, error, initialized, isLoggedIn, isAuthenticated, register, login, logout, fetchUser, init }
 })

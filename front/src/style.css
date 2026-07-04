@@ -1,8 +1,51 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Poppins',sans-serif;
+/* Globale Dark/Light-Theme-Variablen — von :root.dark umgeschaltet
+   (siehe stores/theme.js). Views nutzen diese statt hartkodierter Farben. */
+:root {
+  --il-bg: #f8fafc;
+  --il-bg-alt: #f1f5f9;
+  --il-card: #ffffff;
+  --il-border: #e2e8f0;
+  --il-text: #1e293b;
+  --il-text-2: #64748b;
+  --il-text-3: #94a3b8;
+  --il-accent: #7c3aed;
+  --il-accent-soft: #ede9fe;
+}
+
+:root.dark {
+  --il-bg: #0f0f1a;
+  --il-bg-alt: #16162a;
+  --il-card: #1a1a2e;
+  --il-border: #2a2a3c;
+  --il-text: #e2e8f0;
+  --il-text-2: #a6adc8;
+  --il-text-3: #6c7086;
+  --il-accent: #a78bfa;
+  --il-accent-soft: #2a1e4a;
+}
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  height: 100%;
+  font-family: 'Poppins', 'Segoe UI', system-ui, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Impedisce zoom orizzontale su mobile */
+body {
+  overflow-x: hidden;
+}
+
+/* Assicura che il router-view non crei overflow */
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\GptService;
 use Illuminate\Http\Request;
 use RuntimeException;
+use Throwable;
 
 class ChatController extends Controller
 {
@@ -41,7 +42,15 @@ class ChatController extends Controller
                 options: ['temperature' => 0.4],
             );
         } catch (RuntimeException $e) {
-            return response()->json(['error' => $e->getMessage()], 422);
+            return response()->json([
+                'error' => $e->getMessage(),
+                'details' => $e->getMessage(),
+            ], 502);
+        } catch (Throwable $e) {
+            return response()->json([
+                'error' => 'Exercise generation failed',
+                'details' => $e->getMessage(),
+            ], 500);
         }
 
         return response()->json($exercise);

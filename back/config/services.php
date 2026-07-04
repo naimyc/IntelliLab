@@ -35,8 +35,9 @@ return [
         ],
     ],
     'kiconnect' => [
-    'api_key' => env('KICONNECT_API_KEY'),
-    'url' => env('KICONNECT_API_URL'),
-],
+        'api_key' => env('KICONNECT_API_KEY'),
+        'url' => env('KICONNECT_API_URL'),
+        'verify_ssl' => env('KICONNECT_VERIFY_SSL', true),
+    ],
 
 ];

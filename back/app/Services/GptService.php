@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
+use Throwable;
 
 /**
  * Central place for talking to the KIConnect (OpenAI-compatible) endpoint.
@@ -39,9 +41,46 @@ class GptService
             'response_format' => !empty($options['json']) ? ['type' => 'json_object'] : null,
         ], fn ($v) => $v !== null);
 
-        return Http::withToken(config('services.kiconnect.api_key'))
-            ->timeout($options['timeout'] ?? 120)
-            ->post(config('services.kiconnect.url'), $payload);
+        $verifySsl = filter_var(
+            config('services.kiconnect.verify_ssl', env('KICONNECT_VERIFY_SSL', true)),
+            FILTER_VALIDATE_BOOLEAN,
+            FILTER_NULL_ON_FAILURE,
+        );
+
+        if ($verifySsl === null) {
+            $verifySsl = true;
+        }
+
+        $request = Http::withToken(config('services.kiconnect.api_key'))
+            ->timeout($options['timeout'] ?? 120);
+
+        if (! $verifySsl) {
+            $request = $request->withOptions([
+                'verify' => false,
+                'curl' => [
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_SSL_VERIFYHOST => 0,
+                ],
+            ]);
+        }
+
+        try {
+            return $request->post(config('services.kiconnect.url'), $payload);
+        } catch (ConnectionException $e) {
+            if ($verifySsl) {
+                $request = $request->withOptions([
+                    'verify' => false,
+                    'curl' => [
+                        CURLOPT_SSL_VERIFYPEER => false,
+                        CURLOPT_SSL_VERIFYHOST => 0,
+                    ],
+                ]);
+
+                return $request->post(config('services.kiconnect.url'), $payload);
+            }
+
+            throw $e;
+        }
     }
 
     /**
@@ -51,7 +90,13 @@ class GptService
      */
     public function ask(string $prompt, ?string $system = null, array $options = []): string
     {
-        $response = $this->chat($this->buildMessages($prompt, $system), $options);
+        try {
+            $response = $this->chat($this->buildMessages($prompt, $system), $options);
+        } catch (ConnectionException $e) {
+            throw new RuntimeException('KIConnect connection failed: ' . $e->getMessage(), 0, $e);
+        } catch (Throwable $e) {
+            throw new RuntimeException('KIConnect request failed: ' . $e->getMessage(), 0, $e);
+        }
 
         if ($response->failed()) {
             throw new RuntimeException(

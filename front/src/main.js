@@ -4,16 +4,22 @@ import { createPinia } from 'pinia'
 
 import App from './App.vue'
 import router from './router'
-import { useAuthStore } from './stores/auth'
+import TreeNode from './components/TreeNode.vue'
+import { applyTheme } from './stores/theme'
+
+applyTheme() // vor dem Mount setzen, damit die Seite nicht in hell aufblitzt
 
 const app = createApp(App)
 const pinia = createPinia()
 
 app.use(pinia)
 app.use(router)
+app.component('TreeNode', TreeNode)
 
-const authStore = useAuthStore(pinia)
-
-await authStore.init()
-
-app.mount('#app')
+// Importa auth store DOPO aver installato pinia
+import('./stores/auth').then(({ useAuthStore }) => {
+  const authStore = useAuthStore()
+  authStore.init().finally(() => {
+    app.mount('#app')
+  })
+})

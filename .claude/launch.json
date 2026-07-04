@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "front-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "front",
+      "port": 5173
+    },
+    {
+      "name": "back-serve",
+      "runtimeExecutable": "php",
+      "runtimeArgs": ["artisan", "serve"],
+      "cwd": "back",
+      "port": 8000
+    }
+  ]
+}

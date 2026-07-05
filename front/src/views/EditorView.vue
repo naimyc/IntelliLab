@@ -7,6 +7,19 @@ import { exerciseStore, setExercise } from '../stores/exercise'
 import { projectStore, updateProject, updateAnalyse } from '../stores/projects'
 import { themeStore, toggleTheme } from '../stores/theme'
 
+import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, drawSelection } from '@codemirror/view'
+import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
+import { EditorState } from '@codemirror/state'
+import { syntaxHighlighting, defaultHighlightStyle, bracketMatching, foldGutter, indentOnInput } from '@codemirror/language'
+import { autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete'
+import { lintGutter, lintKeymap, setDiagnostics } from '@codemirror/lint'
+import { javascript } from '@codemirror/lang-javascript'
+import { java } from '@codemirror/lang-java'
+import { python } from '@codemirror/lang-python'
+import { html } from '@codemirror/lang-html'
+import { css } from '@codemirror/lang-css'
+import { oneDark } from '@codemirror/theme-one-dark'
+
 const router = useRouter()
 const isMobile = ref(window.innerWidth < 768)
 function onResize() { isMobile.value = window.innerWidth < 768 }
@@ -310,41 +323,15 @@ const prevTaskSteps = computed(() => {
 })
 
 // ── CodeMirror ─────────────────────────────────────────────────────────────
+// Statisch importiert und von Vite gebündelt (kein CDN-Runtime-Import mehr —
+// esm.sh war für @codemirror/view unzuverlässig und ließ den Editor leer).
 const cmContainer = shallowRef(null)
 const cmView      = shallowRef(null)
-let CM = null
-
-async function loadCM() {
-  if (CM) return CM
-  const [
-    {EditorView,keymap,lineNumbers,highlightActiveLine,highlightActiveLineGutter,drawSelection},
-    {defaultKeymap,history,historyKeymap,indentWithTab},
-    {EditorState},
-    {syntaxHighlighting,defaultHighlightStyle,bracketMatching,foldGutter,indentOnInput},
-    {autocompletion,completionKeymap,closeBrackets,closeBracketsKeymap},
-    {lintGutter,lintKeymap,setDiagnostics},
-    {javascript},{java},{python},{html},{css},{oneDark},
-  ] = await Promise.all([
-    import('https://esm.sh/@codemirror/view@6'),
-    import('https://esm.sh/@codemirror/commands@6'),
-    import('https://esm.sh/@codemirror/state@6'),
-    import('https://esm.sh/@codemirror/language@6'),
-    import('https://esm.sh/@codemirror/autocomplete@6'),
-    import('https://esm.sh/@codemirror/lint@6'),
-    import('https://esm.sh/@codemirror/lang-javascript@6'),
-    import('https://esm.sh/@codemirror/lang-java@6'),
-    import('https://esm.sh/@codemirror/lang-python@6'),
-    import('https://esm.sh/@codemirror/lang-html@6'),
-    import('https://esm.sh/@codemirror/lang-css@6'),
-    import('https://esm.sh/@codemirror/theme-one-dark@6'),
-  ])
-  CM={EditorView,keymap,lineNumbers,highlightActiveLine,highlightActiveLineGutter,drawSelection,
-    defaultKeymap,history,historyKeymap,indentWithTab,EditorState,
-    syntaxHighlighting,defaultHighlightStyle,bracketMatching,foldGutter,indentOnInput,
-    autocompletion,completionKeymap,closeBrackets,closeBracketsKeymap,
-    lintGutter,lintKeymap,setDiagnostics,javascript,java,python,html,css,oneDark}
-  return CM
-}
+const CM = {EditorView,keymap,lineNumbers,highlightActiveLine,highlightActiveLineGutter,drawSelection,
+  defaultKeymap,history,historyKeymap,indentWithTab,EditorState,
+  syntaxHighlighting,defaultHighlightStyle,bracketMatching,foldGutter,indentOnInput,
+  autocompletion,completionKeymap,closeBrackets,closeBracketsKeymap,
+  lintGutter,lintKeymap,setDiagnostics,javascript,java,python,html,css,oneDark}
 
 function getLangExt() {
   if (!CM) return []
@@ -382,7 +369,6 @@ function buildExtensions(content) {
 }
 
 async function initCodeMirror() {
-  await loadCM()
   if (!cmContainer.value) return
   const state = CM.EditorState.create({ doc: activeTab.value?.content||'', extensions: buildExtensions() })
   cmView.value = new CM.EditorView({ state, parent: cmContainer.value })
@@ -656,8 +642,8 @@ onUnmounted(()=>window.removeEventListener('keydown',globalKey))
     <div v-if="isMobile" class="mobile-tabs">
       <button :class="{active:mobilePanel==='files'}"    @click="mobilePanel='files'">📁 Dateien</button>
       <button :class="{active:mobilePanel==='editor'}"   @click="mobilePanel='editor'">💻 Editor</button>
-      <button :class="{active:mobilePanel==='schritte'}" @click="mobilePanel='schritte'">📋 Schritte</button>
-      <button :class="{active:mobilePanel==='feedback'}" @click="mobilePanel='feedback'">💬 Feedback</button>
+      <button :class="{active:mobilePanel==='schritte'}" @click="wechselPanel('schritte')">📋 Schritte</button>
+      <button :class="{active:mobilePanel==='feedback'}" @click="wechselPanel('feedback')">💬 Feedback</button>
     </div>
 
     <!-- ═══ BODY ═══ -->
@@ -740,7 +726,9 @@ onUnmounted(()=>window.removeEventListener('keydown',globalKey))
 
       <!-- ── RIGHT: Schritte / Feedback ── -->
       <aside class="right" v-show="!isMobile||mobilePanel==='schritte'||mobilePanel==='feedback'">
-        <div class="rp-tabs">
+        <!-- Auf Mobile wählt bereits die untere Tab-Leiste Schritte/Feedback aus —
+             der interne Umschalter hier würde nur doppelt dieselben Buttons zeigen. -->
+        <div v-if="!isMobile" class="rp-tabs">
           <button :class="{active:rightPanel==='schritte'}" @click="wechselPanel('schritte')">Schritte</button>
           <button :class="{active:rightPanel==='feedback'}" @click="wechselPanel('feedback')">Feedback</button>
         </div>

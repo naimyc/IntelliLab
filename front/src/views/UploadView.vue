@@ -24,14 +24,17 @@ async function readAsText(file) {
 }
 
 // Liest den tatsächlichen Text aus TXT/MD/PDF/DOCX. PDF und DOCX werden
-// clientseitig über dynamisch nachgeladene Parser (wie CodeMirror im Editor)
-// extrahiert, damit der KI echter Text und kein Binärmüll übergeben wird.
+// clientseitig über echte npm-Pakete (per Vite gebündelt, per import() code-
+// gesplittet) extrahiert, damit die KI echten Text und keinen Binärmüll bekommt.
 async function extractFileText(file) {
   const name = file.name.toLowerCase()
 
   if (name.endsWith('.pdf')) {
-    const pdfjsLib = await import('https://esm.sh/pdfjs-dist@4/build/pdf.min.mjs')
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://esm.sh/pdfjs-dist@4/build/pdf.worker.min.mjs'
+    const [pdfjsLib, { default: workerUrl }] = await Promise.all([
+      import('pdfjs-dist'),
+      import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
+    ])
+    pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl
     const buf = await file.arrayBuffer()
     const pdf = await pdfjsLib.getDocument({ data: buf }).promise
     let text = ''
@@ -44,7 +47,7 @@ async function extractFileText(file) {
   }
 
   if (name.endsWith('.docx')) {
-    const mammoth = await import('https://esm.sh/mammoth@1')
+    const mammoth = await import('mammoth')
     const buf = await file.arrayBuffer()
     const { value } = await mammoth.extractRawText({ arrayBuffer: buf })
     return value

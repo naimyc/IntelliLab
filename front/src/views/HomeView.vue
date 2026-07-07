@@ -12,13 +12,7 @@ const mobileOpen = ref(false)
     <!-- NAV -->
     <nav class="nav">
       <router-link to="/" class="nav-logo">
-        <svg width="32" height="32" viewBox="0 0 100 100" fill="none">
-          <circle cx="50" cy="50" r="50" fill="#7c3aed"/>
-          <path d="M20 50 C20 28 35 18 50 18 C65 18 80 28 80 50 C80 72 65 82 50 82 C35 82 20 72 20 50Z" stroke="#a78bfa" stroke-width="3" fill="none"/>
-          <path d="M50 18 C50 18 35 35 35 50 C35 65 50 82 50 82 C50 82 65 65 65 50 C65 35 50 18 50 18Z" stroke="#c4b5fd" stroke-width="2" fill="none"/>
-          <path d="M18 50 L82 50" stroke="#a78bfa" stroke-width="2"/>
-          <circle cx="50" cy="50" r="6" fill="#c4b5fd"/>
-        </svg>
+        <img src="/ilab.png" alt="IntelliLab" style="height:32px;width:auto;"/>
         <span>IntelliLab</span>
       </router-link>
       <div class="nav-links">
@@ -166,11 +160,7 @@ const mobileOpen = ref(false)
     <!-- FOOTER -->
     <footer class="footer">
       <div class="footer-logo">
-        <svg width="22" height="22" viewBox="0 0 100 100" fill="none">
-          <circle cx="50" cy="50" r="50" fill="#7c3aed"/>
-          <path d="M20 50 C20 28 35 18 50 18 C65 18 80 28 80 50 C80 72 65 82 50 82 C35 82 20 72 20 50Z" stroke="#a78bfa" stroke-width="3" fill="none"/>
-          <circle cx="50" cy="50" r="6" fill="#c4b5fd"/>
-        </svg>
+        <img src="/ilab.png" alt="IntelliLab" style="height:22px;width:auto;"/>
         IntelliLab
       </div>
       <p>© 2026 IntelliLab · Hochschule Bochum · Webtechnologien II</p>
